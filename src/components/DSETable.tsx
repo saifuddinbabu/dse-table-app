@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSocketData, StockRow } from "../context/SocketDataContext";
+import { getLatestStockPrice } from "../utils/api";
 
 type ColumnKey = keyof StockRow;
 
@@ -31,7 +32,7 @@ function parseNum(val: string | undefined): number | null {
 }
 
 export default function DSETable() {
-  const { stocks, isConnected, lastUpdated } = useSocketData();
+  const { stocks, isConnected, lastUpdated,isMarketOpen } = useSocketData();
 
 
 
@@ -40,6 +41,13 @@ export default function DSETable() {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [page, setPage] = useState<number>(1);
   const PAGE_SIZE = 25;
+
+  /* useEffect(() => {
+    getLatestStockPrice().then(data=>{
+      console.log({data});
+      
+    })
+  },[]) */
 
   const handleSort = (key: ColumnKey) => {
     if (sortKey === key) {
@@ -52,7 +60,7 @@ export default function DSETable() {
   };
 
   const filtered = useMemo(() => {
-    console.log({stocks});
+    // console.log({stocks});
     
     const q = search.trim().toLowerCase();
     return stocks.filter(r =>
@@ -93,9 +101,13 @@ export default function DSETable() {
               <h1 className="text-2xl font-bold text-green-900 tracking-tight">DSE Market Data</h1>
               <p className="text-sm text-green-600 mt-0.5 flex items-center gap-2">
                 Dhaka Stock Exchange — {stocks.length} securities
-                <span className={`inline-flex items-center gap-1 text-xs font-medium ${isConnected ? "text-green-600" : "text-red-500"}`}>
+                {/* <span className={`inline-flex items-center gap-1 text-xs font-medium ${isConnected ? "text-green-600" : "text-red-500"}`}>
                   <span className={`w-1.5 h-1.5 rounded-full inline-block ${isConnected ? "bg-green-500" : "bg-red-400"}`}></span>
                   {isConnected ? "Live" : "Disconnected"}
+                </span> */}
+                <span className={`inline-flex items-center gap-1 text-xs font-medium ${isMarketOpen ? "text-green-600" : "text-red-500"}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full inline-block ${isMarketOpen ? "bg-green-500" : "bg-red-400"}`}></span>
+                  Market is {isMarketOpen ? "Open" : "Closed"}
                 </span>
               </p>
             </div>

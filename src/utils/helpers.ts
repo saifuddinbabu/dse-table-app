@@ -1,4 +1,6 @@
 export const formatDate =( date: Date = new Date(), format: string = "YYYY-MM-DD HH:mm:ss"): string => {
+  // const fullMonths = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  // const SortMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const pad = (n: number): string => String(n).padStart(2, "0");
 
   const year: number = date.getFullYear();

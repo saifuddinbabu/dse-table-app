@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState, useMemo, ReactNode } from "react";
+import dateFormat from "dateformat";
 import { socket } from "../socket";
 import { formatDate } from "../utils/helpers";
+import { getLatestStockPrice } from "../utils/api";
 
 export interface StockRow {
   sl: string;
@@ -20,6 +22,8 @@ interface SocketDataContextValue {
   stocks: StockRow[];
   isConnected: boolean;
   lastUpdated: string;
+  isMarketOpen: boolean;
+  
 }
 
 const SocketDataContext = createContext<SocketDataContextValue | undefined>(undefined);
@@ -34,8 +38,21 @@ export function SocketDataProvider({ children, initialStocks = [] }: SocketDataP
   const [stocks, setStocks] = useState<StockRow[]>(initialStocks);
   const [isConnected, setIsConnected] = useState(socket.connected);
   const [lastUpdated, setLastUpdated] = useState<string>("");
+  const [isMarketOpen, setIsMarketOpen] = useState<boolean>(false);
 
   useEffect(() => {
+    getLatestStockPrice().then(data=>{
+      console.log({data});
+      if (data?.table) {
+        setStocks(data.table);
+        const latestDate = data?.lastUpdateTime ?? "";
+        const now: Date = new Date(latestDate);
+        if(now)
+        setLastUpdated(dateFormat(now, 'dddd, dS "of" mmmm, yyyy, h:MM:ss TT'));
+        setIsMarketOpen( false)
+      }
+      
+    })
     function onConnect() {
       setIsConnected(true);
     }
@@ -45,12 +62,15 @@ export function SocketDataProvider({ children, initialStocks = [] }: SocketDataP
     }
 
     function onServerUpdate(data: any) {
+      console.log({data:data?.data});
+      
       if (data?.data?.table) {
         setStocks(data.data.table);
         const latestDate = data?.data?.lastUpdateTime ?? "";
         const now: Date = new Date(latestDate);
         if(now)
-        setLastUpdated(formatDate(now, "DD/MM/YYYY HH:mm"));
+        setLastUpdated(dateFormat(now, 'dddd, dS "of" mmmm, yyyy, h:MM:ss TT'));
+        setIsMarketOpen(data?.data?.marketStatus ?? false)
       }
     }
 
@@ -69,8 +89,8 @@ export function SocketDataProvider({ children, initialStocks = [] }: SocketDataP
   }, []);
 
   const value = useMemo(
-    () => ({ stocks, isConnected, lastUpdated }),
-    [stocks, isConnected, lastUpdated]
+    () => ({ stocks, isConnected, lastUpdated, isMarketOpen }),
+    [stocks, isConnected, lastUpdated,isMarketOpen]
   );
 
   return (
